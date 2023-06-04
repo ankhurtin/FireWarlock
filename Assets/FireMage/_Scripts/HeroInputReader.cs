@@ -10,7 +10,7 @@ namespace FireMage._Scripts {
         }
         
         public void OnCastBall(InputAction.CallbackContext context) {
-            hero.CastBall();
+            hero.CastBall(context);
         }
     }
 }

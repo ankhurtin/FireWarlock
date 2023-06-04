@@ -1,6 +1,7 @@
 using System.Threading;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
 namespace FireMage._Scripts {
@@ -15,6 +16,7 @@ namespace FireMage._Scripts {
         private Aim _aim;
         private GameObject _aimPoint;
         private GameObject _ballInstance;
+        private float _pressedCastInputTime;
 
         private static readonly int IsRunning = Animator.StringToHash("IsRunning");
 
@@ -41,15 +43,23 @@ namespace FireMage._Scripts {
             FlipX();
         }
 
-        public void CastBall() {
+        public void CastBall(InputAction.CallbackContext context) {
             if (ballPrefab == null) return;
-            var startPosition = _aimPoint.transform.position;
-            var forceBall = _aim.GetDir() * hitForce;
-
-            if (_ballInstance == null || _ballInstance.IsDestroyed()) {
+            if (_pressedCastInputTime == 0) _pressedCastInputTime = Time.time;
+            if ((_ballInstance == null || _ballInstance.IsDestroyed()) && context.canceled) {
+                var time = Time.time - _pressedCastInputTime;
+                var forceMultiplier = (float)(time >= 3 ? 3 : time) / 3;
+                var angle = _aim.GetAngle();
+                var x = Mathf.Cos(angle * Mathf.PI / 180) * hitForce * forceMultiplier;
+                var y = Mathf.Sin(angle * Mathf.PI / 180) * hitForce * forceMultiplier;
+                var startPosition = _aimPoint.transform.position;
+                var forceBall = new Vector2(x, y);
+                
                 _ballInstance = Instantiate(ballPrefab);
                 var ball = _ballInstance.GetComponent<Ball>();
                 ball.Hit(startPosition, forceBall);
+
+                _pressedCastInputTime = 0;
             }
         }
         

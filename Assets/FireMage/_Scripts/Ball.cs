@@ -8,17 +8,23 @@ namespace FireMage._Scripts {
         [SerializeField] private GameObject explosionPrefab;
         private Rigidbody2D _rigidBody;
         private bool _isRunning;
-        private const float VelocityThreshold = 0.00003f;
         private GameObject _explosionInstance;
         private SpriteRenderer _sprite;
         private ParticleSystem _fireEffect;
         private Light _lightEffect;
+        private VictoryController _victoryController;
+        private GameElementsState _gameElementsState;
+        private UIController _uiController;
 
         private void Awake() {
             _rigidBody = GetComponent<Rigidbody2D>();
             _sprite = GetComponentInChildren<SpriteRenderer>();
             _fireEffect = GetComponentInChildren<ParticleSystem>();
             _lightEffect = GetComponentInChildren<Light>();
+            _victoryController = FindObjectOfType<VictoryController>();
+            _gameElementsState = FindObjectOfType<GameElementsState>();
+            _uiController = FindObjectOfType<UIController>();
+
         }
 
         private void FixedUpdate() {
@@ -57,8 +63,17 @@ namespace FireMage._Scripts {
                 _fireEffect.gameObject.SetActive(false);
                 _lightEffect.gameObject.SetActive(false);
                 yield return new WaitForSeconds(0.5f);
-                LevelManager.FinishLevel();
+                CheckVictory();
                 Destroy(gameObject);
+            }
+        }
+
+        private void CheckVictory() {
+            if (_victoryController.IsVictory()) {
+                _uiController.CompletedLevel();
+            }
+            else {
+                _gameElementsState.ResetState();
             }
         }
     }

@@ -3,7 +3,7 @@ using UnityEngine.SceneManagement;
 
 namespace FireMage._Scripts.Utility {
     public class UIController : MonoBehaviour {
-
+        [SerializeField] private Canvas uiWinner;
         public void StartGame() {
             SceneManager.LoadScene("SampleScene");
         }
@@ -19,6 +19,10 @@ namespace FireMage._Scripts.Utility {
 
         public void GoToMainMenu() {
             SceneManager.LoadScene("Intro");
+        }
+
+        public void CompletedLevel() {
+            uiWinner.gameObject.SetActive(true);
         }
     }
 }
