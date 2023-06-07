@@ -9,8 +9,9 @@ namespace FireMage._Scripts {
         [SerializeField] private float speed = 3f;
         [SerializeField] private GameObject ballPrefab;
         [SerializeField] private float hitForce;
+        
+        [SerializeField] private Animator powerBar;
         private float _direction;
-        private Animator _animator;
         private bool _isFlip;
         private GameObject _spriteWrapper;
         private Aim _aim;
@@ -19,9 +20,9 @@ namespace FireMage._Scripts {
         private float _pressedCastInputTime;
 
         private static readonly int IsRunning = Animator.StringToHash("IsRunning");
+        private static readonly int InProgress = Animator.StringToHash("InProgress");
 
         private void Awake() {
-            _animator = GetComponentInChildren<Animator>();
             _spriteWrapper = GameObject.FindGameObjectWithTag("MageSpriteWrapper");
             _aim = GetComponentInChildren<Aim>();
             _aimPoint = GameObject.FindGameObjectWithTag("AimPoint");
@@ -45,13 +46,18 @@ namespace FireMage._Scripts {
 
         public void CastBall(InputAction.CallbackContext context) {
             if (ballPrefab == null) return;
-            if (_pressedCastInputTime == 0) _pressedCastInputTime = Time.time;
+            if (_pressedCastInputTime == 0) {
+                _pressedCastInputTime = Time.time;
+                powerBar.enabled = true;
+                powerBar.ResetTrigger(InProgress);
+                powerBar.SetTrigger(InProgress);
+            }
             if ((_ballInstance == null || _ballInstance.IsDestroyed()) && context.canceled) {
                 var time = Time.time - _pressedCastInputTime;
-                var forceMultiplier = (float)(time >= 3 ? 3 : time) / 3;
+                var forceMultiplier = (float)(time >= 2 ? 2 : time) / 2;
                 var angle = _aim.GetAngle();
-                var x = Mathf.Cos(angle * Mathf.PI / 180) * hitForce * forceMultiplier;
-                var y = Mathf.Sin(angle * Mathf.PI / 180) * hitForce * forceMultiplier;
+                var x = Mathf.Sin(angle * Mathf.PI / 180) * hitForce * forceMultiplier;
+                var y = Mathf.Cos(angle * Mathf.PI / 180) * hitForce * forceMultiplier;
                 var startPosition = _aimPoint.transform.position;
                 var forceBall = new Vector2(x, y);
                 
@@ -60,6 +66,7 @@ namespace FireMage._Scripts {
                 ball.Hit(startPosition, forceBall);
 
                 _pressedCastInputTime = 0;
+                powerBar.enabled = false;
             }
         }
         

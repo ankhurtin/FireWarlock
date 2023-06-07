@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using FireMage._Scripts.Utility;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace FireMage._Scripts {
@@ -15,6 +16,9 @@ namespace FireMage._Scripts {
         private VictoryController _victoryController;
         private GameElementsState _gameElementsState;
         private UIController _uiController;
+        private AudioSource[] _soundEffects;
+        private AudioSource _hitSoundEffect;
+        private AudioSource _explosionSoundEffect;
 
         private void Awake() {
             _rigidBody = GetComponent<Rigidbody2D>();
@@ -24,6 +28,9 @@ namespace FireMage._Scripts {
             _victoryController = FindObjectOfType<VictoryController>();
             _gameElementsState = FindObjectOfType<GameElementsState>();
             _uiController = FindObjectOfType<UIController>();
+            _soundEffects = GetComponentsInChildren<AudioSource>();
+            _hitSoundEffect = _soundEffects[0];
+            _explosionSoundEffect = _soundEffects[1];
 
         }
 
@@ -33,9 +40,12 @@ namespace FireMage._Scripts {
 
         private void OnCollisionEnter2D(Collision2D other) {
             var hero = other.gameObject.GetComponent<Hero>();
-
+            
             if (hero != null) {
                 StartCoroutine(DestroyBall());
+            }
+            else {
+                _hitSoundEffect.Play();
             }
         }
 
@@ -50,14 +60,15 @@ namespace FireMage._Scripts {
         private void WatchIsOver() {
             var speed = Vector3.Magnitude(_rigidBody.velocity);
             if (speed < 2f) {
+                _isRunning = false;
                 StartCoroutine(DestroyBall());
             }
         }
 
         private IEnumerator DestroyBall() {
-            _isRunning = false;
-            if (!_explosionInstance) {
+            if (!_explosionInstance && !_isRunning) {
                 _explosionInstance = Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+                _explosionSoundEffect.Play();
                 Destroy(_explosionInstance, 0.5f);
                 _sprite.gameObject.SetActive(false);
                 _fireEffect.gameObject.SetActive(false);
